@@ -6,50 +6,34 @@ from parselib import BaBaParser
 import sys
 import argparse
 
-parserList = [
+parser_list = [
     'BaBaParser',
     'BiQuParser',
     'DingDianParser',
 ]
 
-def parserByName(className) :
-    module = __import__('parselib')
-    parserModule = getattr(module, className)
-    # print (parserModule)
-    parser = getattr(parserModule, className)()
-    # print (parser)
-    return parser
+def create_instance(module_name, class_name, *args, **kwargs):
+    module_meta = __import__(module_name, globals(), locals(), [class_name])
+    class_meta = getattr(module_meta, class_name)
+    obj = class_meta(*args, **kwargs)
+    return obj
 
 
-optParser = argparse.ArgumentParser()
-optParser.add_argument('name', help = '书名或URL')
-optParser.add_argument('-n', help = '书名或URL', dest = 'name')
+opt_parser = argparse.ArgumentParser()
+opt_parser.add_argument('name', help='书名或URL')
+opt_parser.add_argument('-n', help='书名或URL', dest='name')
+opt_parser.add_argument('-c', help='0八八, 1笔趣, 2顶点', dest='channel')
+opt_parser.add_argument('-opt', help='0书名, 1URL', dest='option')
 
-optParser.add_argument('-c', help = '0八八, 1笔趣, 2顶点', dest = 'channel')
-
-optParser.add_argument('-opt', help = '0书名, 1URL', dest = 'option')
-
-args = optParser.parse_args()
-bookName = args.name
-parserType = 0 if not args.channel else args.channel
+args = opt_parser.parse_args()
+keyword = args.name
+channel = 0 if not args.channel else args.channel
 option = 0 if not args.option else args.option
-print (bookName, parserType, option)
+# print(keyword, channel, option)
 
-parserName = parserList[int(parserType)]
-parser = parserByName(parserName)
-print (parser.displayName())
+parser_name = parser_list[int(channel)]
+parser = create_instance('parselib.' + parser_name, parser_name, keyword, option)
 
-parser.start(bookName, option)
+# print(parser.parser_name)
+parser.start()
 
-
-
-# bookName = sys.argv[1]
-# parserType = 0
-# if len(sys.argv) > 2 :
-#     parserType = str(sys.argv[2])
-#
-#
-# try :
-#     parser.start(bookName)
-# except :
-#     parser.start(bookName)

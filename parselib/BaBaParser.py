@@ -3,41 +3,44 @@
 from pyquery import PyQuery as pq
 from html import escape
 import urllib
-from parselib.Parser import Parser
+from parselib.parser import Parser
+import parselib.book as bk
 
 
 class BaBaParser(Parser):
-    def displayName(self):
-        return '八八'
 
-    def searchURL(self):
-        return 'https://www.88dus.com/search/so.php?search_field=0&q=+'
+    def __init__(self, name, option):
+        super().__init__(name, option)
+        self.parser_name = '八八'
+        self.search_root_url = 'https://www.88dus.com/search/so.php?search_field=0&q='
 
-    def searchParser(self, searchURL):
-        print ("搜索URL\n" + searchURL)
+    def search_parser(self, search_url):
         name = None
         url = None
-        a = pq(searchURL)('.block_txt')('p')('a')
+        a = pq(search_url)('.block_txt')('p')('a')
         name = a('h2').text()
         url = 'https://www.88dus.com' + a.attr('href')
-        return [name, url]
+        book = bk.Book()
+        book.url = url
+        book.name = name
+        return book
 
-    def chapterListParser(self, bookURL):
-        chapterEles = pq(url=bookURL, encoding='gbk')('.mulu')('li').items()
-        chapterNames = []
-        chapterURLs = []
-        for chapterEle in chapterEles:
-            chapterName = chapterEle('a').text()
-            chapterURL = urllib.parse.urljoin(bookURL, chapterEle('a').attr('href'))
-            if not chapterName:
+    def chapter_list_parser(self, book_url):
+        chapter_eles = pq(url=book_url, encoding='gbk')('.mulu')('li').items()
+        chapter_list = []
+        for chapter_ele in chapter_eles:
+            name = chapter_ele('a').text()
+            url = urllib.parse.urljoin(book_url, chapter_ele('a').attr('href'))
+            if not name:
                 continue
-            chapterNames.append(chapterName)
-            chapterURLs.append(chapterURL)
+            chapter = bk.Chapter()
+            chapter.name = name
+            chapter.url = url
+            chapter_list.append(chapter)
+        return chapter_list
 
-        return [chapterNames, chapterURLs]
-
-    def chapterParser(self, chapterURL):
-        contentEle = pq(url=chapterURL, encoding='gbk')('.yd_text2')
-        content = contentEle.html().replace('&#13;', '')
-        # print (content)
+    def chapter_parser(self, chapter_url):
+        ele = pq(url=chapter_url, encoding='gbk')('.yd_text2')
+        content = ele.html().replace('&#13;', '')
+        # print(content)
         return content

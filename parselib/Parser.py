@@ -36,7 +36,9 @@ class Parser:
         file.close()
 
     def merge(self):
-        book = open(self.bookName + '.txt', 'w')
+        if not os.path.exists('./Downloads/') :
+            os.makedirs('./Downloads')
+        book = open('./Downloads/' + self.bookName + '.txt', 'w')
         for fileName in os.listdir(self.folderPath()) :
             # print (fileName)
             file = open(self.folderPath() + '/' + fileName, 'r')
@@ -98,6 +100,7 @@ class Parser:
         dsFile = self.folderPath() + '/.DS_Store'
         if os.path.exists(dsFile) :
             os.remove(dsFile)
+        #全部章节下载完成后,合并
         if len(os.listdir(self.folderPath())) >= len(chapterURLs) :
             print ('正在合并')
             self.merge()

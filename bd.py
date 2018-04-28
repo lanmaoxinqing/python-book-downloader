@@ -21,19 +21,17 @@ def create_instance(module_name, class_name, *args, **kwargs):
 
 
 opt_parser = argparse.ArgumentParser()
-opt_parser.add_argument('name', help='书名或URL')
-opt_parser.add_argument('-n', help='书名或URL', dest='name')
-opt_parser.add_argument('-c', help='0八八, 1笔趣, 2顶点, 3 2K,', dest='channel')
-opt_parser.add_argument('-opt', help='0书名, 1URL', dest='option')
+opt_parser.add_argument('name', help='书名或小说目录URL')
+opt_parser.add_argument('-n', help='书名或URL', dest='name', default='')
+opt_parser.add_argument('-c', help='0八八, 1笔趣, 2顶点, 3 2K,', dest='channel', default=0)
+opt_parser.add_argument('-opt', help='0书名, 1URL', dest='option', default=0)
 
 args = opt_parser.parse_args()
-keyword = args.name
-channel = 0 if not args.channel else args.channel
-option = 0 if not args.option else args.option
+# keyword = args.name
 # print(keyword, channel, option)
 
-parser_name = parser_list[int(channel)]
-parser = create_instance('parselib.' + parser_name, parser_name, keyword, option)
+parser_name = parser_list[int(args.channel)]
+parser = create_instance('parselib.' + parser_name, parser_name, args.name, args.option)
 
 # print(parser.parser_name)
 parser.start()

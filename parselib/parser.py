@@ -58,13 +58,13 @@ class Parser:
             chapter.path = chapter_path
             # 文件检查
             if os.path.exists(chapter_path):
-                print(chapter.name+'(' + str(i) + '/' + str(count) + ')已存在')
+                print(chapter.name+'(' + str(i + 1) + '/' + str(count) + ')已存在')
                 continue
             content = self.chapter_parser(chapter.url)
             content = content.replace('<br />', '\n')
             content = content.replace('<br/>', '\n')
             chapter.content = content
-            print('正在保存' + chapter.name + '(' + str(i) + '/' + str(count) + ')')
+            print('正在保存' + chapter.name + '(' + str(i + 1) + '/' + str(count) + ')')
             self.save_chapter(chapter)
         # 删除预览文件
         ds_file = self.download_temp_path() + '.DS_Store'

@@ -10,6 +10,7 @@ parser_list = [
     'BaBaParser',
     'BiQuParser',
     'DingDianParser',
+    'TwoKParser',
 ]
 
 def create_instance(module_name, class_name, *args, **kwargs):
@@ -22,7 +23,7 @@ def create_instance(module_name, class_name, *args, **kwargs):
 opt_parser = argparse.ArgumentParser()
 opt_parser.add_argument('name', help='书名或URL')
 opt_parser.add_argument('-n', help='书名或URL', dest='name')
-opt_parser.add_argument('-c', help='0八八, 1笔趣, 2顶点', dest='channel')
+opt_parser.add_argument('-c', help='0八八, 1笔趣, 2顶点, 3 2K,', dest='channel')
 opt_parser.add_argument('-opt', help='0书名, 1URL', dest='option')
 
 args = opt_parser.parse_args()

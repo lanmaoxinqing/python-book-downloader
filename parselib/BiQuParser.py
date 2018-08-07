@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 from pyquery import PyQuery as pq
-from html import escape
 import urllib
 from parselib.parser import Parser
 import parselib.book as bk
-
+import aiohttp
 
 class BiQuParser(Parser):
 
@@ -39,9 +38,13 @@ class BiQuParser(Parser):
             chapter_list.append(chapter)
         return chapter_list
 
-    def chapter_parser(self, chapter_url):
-        ele = pq(chapter_url,encoding='utf-8')('#content')
-        ele('script').remove()
-        content = ele.html().replace('&#13;', '')
-        # print(content)
-        return content
+    async def chapter_parser(self, chapter_url):
+        async with aiohttp.request('GET', url=chapter_url) as response:
+            response_str = await response.text(encoding='utf-8', errors='ignore')
+            # print(response_str)
+            ele = pq(response_str)('#content')
+            ele('script').remove()
+            # ele = pq(url=chapter_url, encoding='gbk')('.yd_text2')
+            content = ele.html().replace('&#13;', '')
+            # print(content)
+            return content

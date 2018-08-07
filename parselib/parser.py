@@ -7,6 +7,10 @@ import urllib
 import shutil
 import copy
 import parselib.book as bk
+import asyncio
+import aiohttp
+
+semaphore = asyncio.Semaphore(5)
 
 
 class Parser:
@@ -15,6 +19,7 @@ class Parser:
     parser_name = '未知'
     search_root_url = ''
 
+
     def __init__(self, name, option):
         self.keyword = name
         self.option = option
@@ -22,6 +27,22 @@ class Parser:
         # 创建目录
         if not os.path.exists(Parser.download_root_directory):
             os.makedirs(Parser.download_root_directory)
+
+    async def download_chapter(self, i):
+        count = len(self.book.chapter_list)
+        chapter_path = self.path_for_chapter_at_index(i)
+        chapter = self.book.chapter_list[i]
+        chapter.path = chapter_path
+        # 文件检查
+        if os.path.exists(chapter_path):
+            print(chapter.name + '(' + str(i + 1) + '/' + str(count) + ')已存在')
+            return
+        content = await self.async_chapter_parser(chapter.url)
+        content = content.replace('<br />', '\n')
+        content = content.replace('<br/>', '\n')
+        chapter.content = content
+        print('正在保存' + chapter.name + '(' + str(i + 1) + '/' + str(count) + ')')
+        await self.save_chapter(chapter)
 
     def start(self):
         if self.option == 0:
@@ -40,8 +61,8 @@ class Parser:
                 print(self.book.name + '\n' + self.book.url)
         else:
             self.book = bk.Book()
-            self.book.name = keyword.replace('/', '')
-            self.book.url = keyword
+            self.book.name = self.keyword.replace('/', '')
+            self.book.url = self.keyword
 
         if not os.path.exists(self.download_temp_path()):
             os.makedirs(self.download_temp_path())
@@ -52,20 +73,12 @@ class Parser:
         print('最新章节:' + self.book.chapter_list[-1].name)
         count = len(self.book.chapter_list)
         # 下载章节
+        loop = asyncio.get_event_loop()
+        tasks = []
         for i in range(count):
-            chapter_path = self.path_for_chapter_at_index(i)
-            chapter = self.book.chapter_list[i]
-            chapter.path = chapter_path
-            # 文件检查
-            if os.path.exists(chapter_path):
-                print(chapter.name+'(' + str(i + 1) + '/' + str(count) + ')已存在')
-                continue
-            content = self.chapter_parser(chapter.url)
-            content = content.replace('<br />', '\n')
-            content = content.replace('<br/>', '\n')
-            chapter.content = content
-            print('正在保存' + chapter.name + '(' + str(i + 1) + '/' + str(count) + ')')
-            self.save_chapter(chapter)
+            tasks.append(self.download_chapter(i))
+        loop.run_until_complete(asyncio.wait(tasks))
+        loop.close()
         # 删除预览文件
         ds_file = self.download_temp_path() + '.DS_Store'
         if os.path.exists(ds_file):
@@ -76,6 +89,8 @@ class Parser:
             self.merge(self.book)
 
     # tools
+
+
     def search_url(self):
         return self.search_root_url + urllib.parse.quote(self.keyword)
 
@@ -91,13 +106,17 @@ class Parser:
     def chapter_list_parser(self, book_url):
        return self.book.chapter_list
 
-    def chapter_parser(self, chapter_url):
+    async def async_chapter_parser(self, chapter_url):
+        with (await semaphore):
+            content = await self.chapter_parser(chapter_url)
+            return content
+
+    async def chapter_parser(self, chapter_url):
         return ''
 
-    def save_chapter(self, chapter):
-        file = open(chapter.path, 'a')
-        file.write(chapter.content)
-        file.close()
+    async def save_chapter(self, chapter):
+        with open(chapter.path, 'a') as file:
+            file.write(chapter.content)
 
     def merge(self, book):
         file = open(Parser.download_root_directory + book.name + '.txt', 'w')

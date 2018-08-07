@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 from pyquery import PyQuery as pq
-from html import escape
 import urllib
 from parselib.parser import Parser
 import parselib.book as bk
-
+import aiohttp
 
 class BaBaParser(Parser):
 
@@ -39,8 +38,12 @@ class BaBaParser(Parser):
             chapter_list.append(chapter)
         return chapter_list
 
-    def chapter_parser(self, chapter_url):
-        ele = pq(url=chapter_url, encoding='gbk')('.yd_text2')
-        content = ele.html().replace('&#13;', '')
-        # print(content)
-        return content
+    async def chapter_parser(self, chapter_url):
+        async with aiohttp.request('GET', url=chapter_url) as response:
+            response_str = await response.text(encoding='gbk', errors='ignore')
+            # print(response_str)
+            ele = pq(response_str)('.yd_text2')
+            # ele = pq(url=chapter_url, encoding='gbk')('.yd_text2')
+            content = ele.html().replace('&#13;', '')
+            # print(content)
+            return content

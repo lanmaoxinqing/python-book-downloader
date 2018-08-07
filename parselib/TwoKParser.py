@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 from pyquery import PyQuery as pq
-from html import escape
 import urllib
 from parselib.parser import Parser
 import parselib.book as bk
-import chardet
-
+import aiohttp
 
 class TwoKParser(Parser):
 
@@ -67,3 +65,21 @@ class TwoKParser(Parser):
             .replace('2k小说阅读网', '')
         # print(content)
         return content
+
+
+    async def chapter_parser(self, chapter_url):
+        async with aiohttp.request('GET', url=chapter_url) as response:
+            response_str = await response.text(encoding='gbk', errors='ignore')
+            # print(response_str)
+            ele = pq(response_str)('.Text')
+            ele('a').remove()
+            ele('font').remove()
+            ele('strong').remove()
+            ele('script').remove()
+            content = ele.html() \
+                .replace('&#13;', '') \
+                .replace('<br>', '\n') \
+                .replace('2k小说阅读网', '')
+            # print(content)
+            return content
+
